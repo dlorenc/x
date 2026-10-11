@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/ansi"
 )
 
@@ -115,6 +116,29 @@ func TestCursorStyleDefault(t *testing.T) {
 			c := e.ActiveScreen().Cursor()
 			if c.Style != tc.wantStyle || c.Steady != tc.wantSteady {
 				t.Errorf("cursor: got = style %v steady %v, want = style %v steady %v", c.Style, c.Steady, tc.wantStyle, tc.wantSteady)
+			}
+		})
+	}
+}
+
+func TestScrollOffOnlyFromTheTopRow(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  int
+	}{
+		{name: "full screen", input: "\x1b[5;1Ha\nb\nc\n", want: 3},
+		{name: "region from row 1", input: "\x1b[1;5r\x1b[5;1Ha\nb\nc\n", want: 3},
+		{name: "region below a header", input: "\x1b[3;5r\x1b[5;1Ha\nb\nc\n", want: 0},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			e := NewEmulator(5, 5)
+			var got int
+			e.SetScrollOffFunc(func(uv.Line) { got++ })
+			_, _ = e.WriteString(tc.input)
+			if got != tc.want {
+				t.Errorf("lines scrolled off: got = %d, want = %d", got, tc.want)
 			}
 		})
 	}

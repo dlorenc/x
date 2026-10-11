@@ -396,8 +396,12 @@ func (s *Screen) DeleteLine(n int) bool {
 	// Save lines to scrollback if we're at the top of the scroll region
 	// and the scroll region uses the full width (typical terminal scroll).
 	// This captures lines that would be lost during scroll up operations.
+	//
+	// Only a region that starts at the first row adds to history, as in
+	// xterm, Ghostty and xterm.js: lines leaving a region below a status
+	// line never left the screen.
 	if (s.scrollback != nil || s.scrollOff != nil) && y == scroll.Min.Y &&
-		scroll.Min.X == 0 && scroll.Max.X == s.buf.Width() {
+		scroll.Min.Y == 0 && scroll.Min.X == 0 && scroll.Max.X == s.buf.Width() {
 		// Save lines that will be deleted
 		for i := range min(n, scroll.Max.Y-y, s.buf.Height()-y) {
 			if line := s.buf.Line(y + i); line != nil {
