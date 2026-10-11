@@ -55,7 +55,7 @@ func TestHyperlinkLimits(t *testing.T) {
 		{name: "longest URI kept", input: "\x1b]8;;" + strings.Repeat("u", maxLinkURI) + "\x07", wantURL: strings.Repeat("u", maxLinkURI)},
 		{name: "oversized URI dropped", input: "\x1b]8;;https://x\x07\x1b]8;;" + strings.Repeat("u", maxLinkURI+1) + "\x07"},
 		{name: "oversized params dropped", input: "\x1b]8;" + strings.Repeat("p", maxLinkParams+1) + ";https://x\x07"},
-		{name: "C1 in UTF-8 dropped", input: "\x1b]8;;https://a\u009d52;c;?\u009c\x07", wantURL: "https://a52;c;?"},
+		{name: "DEL dropped", input: "\x1b]8;;https://a\x7fb\x07", wantURL: "https://ab"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -66,6 +66,21 @@ func TestHyperlinkLimits(t *testing.T) {
 				t.Errorf("link: got = %q params %q, want = %q params %q", l.URL, l.Params, tc.wantURL, tc.wantParams)
 			}
 		})
+	}
+}
+
+func TestSanitizeOSC(t *testing.T) {
+	for in, want := range map[string]string{
+		"https://example.com/a;b": "https://example.com/a;b",
+		"a\x1b]52;c;?\x07b":       "a]52;c;?b",
+		"a\u009d52;c;?\u009cb":    "a52;c;?b",
+		"a\x7fb":                  "ab",
+		"a\xffb":                  "a\uFFFDb",
+		"日本\u200d":                "日本\u200d",
+	} {
+		if got := SanitizeOSC(in); got != want {
+			t.Errorf("SanitizeOSC(%q): got = %q, want = %q", in, got, want)
+		}
 	}
 }
 
