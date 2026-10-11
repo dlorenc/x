@@ -43,6 +43,9 @@ func (e *Emulator) setAltScreenMode(on bool) {
 		return
 	}
 	if on {
+		// The pending wrap belongs to the main screen's cursor, which the
+		// switch back restores: keep it for then.
+		e.mainPhantom = e.atPhantom
 		e.scr = &e.scrs[1]
 		e.scrs[1].cur = e.scrs[0].cur
 		e.scr.Clear()
@@ -55,6 +58,12 @@ func (e *Emulator) setAltScreenMode(on bool) {
 		alt := e.scrs[1].cur
 		e.scr = &e.scrs[0]
 		e.scr.cur.Hidden, e.scr.cur.Style, e.scr.cur.Steady = alt.Hidden, alt.Style, alt.Steady
+		// The main cursor comes back with its pending wrap, as xterm's
+		// ?1049l restores it with the cursor; the alternate screen's does
+		// not follow. A resize meanwhile may have moved the cursor off
+		// the last column, where no wrap is pending.
+		e.atPhantom = e.keptMainPhantom()
+		e.mainPhantom = false
 	}
 	if e.cb.AltScreen != nil {
 		e.cb.AltScreen(on)
