@@ -100,7 +100,9 @@ func NewEmulator(w, h int) *Emulator {
 	t.scrs[1].cb = &t.cb
 	t.parser = ansi.NewParser()
 	t.parser.SetParamsSize(parser.MaxParamsSize)
-	t.parser.SetDataSize(1024 * 1024 * 4) // 4MB data buffer
+	// The buffer is allocated up front, per emulator, and bounds every OSC
+	// and DCS payload.
+	t.parser.SetDataSize(1 << 20)
 	t.parser.SetHandler(ansi.Handler{
 		Print:     t.handlePrint,
 		Execute:   t.handleControl,
