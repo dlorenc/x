@@ -42,3 +42,28 @@ func TestDefaultModesAreTracked(t *testing.T) {
 		}
 	}
 }
+
+func TestHyperlinkLimits(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantURL    string
+		wantParams string
+	}{
+		{name: "ordinary", input: "\x1b]8;id=1;https://x/a;b\x07", wantURL: "https://x/a;b", wantParams: "id=1"},
+		{name: "longest URI kept", input: "\x1b]8;;" + strings.Repeat("u", maxLinkURI) + "\x07", wantURL: strings.Repeat("u", maxLinkURI)},
+		{name: "oversized URI dropped", input: "\x1b]8;;https://x\x07\x1b]8;;" + strings.Repeat("u", maxLinkURI+1) + "\x07"},
+		{name: "oversized params dropped", input: "\x1b]8;" + strings.Repeat("p", maxLinkParams+1) + ";https://x\x07"},
+		{name: "C1 in UTF-8 dropped", input: "\x1b]8;;https://a\u009d52;c;?\u009c\x07", wantURL: "https://a52;c;?"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			e := NewEmulator(5, 2)
+			_, _ = e.WriteString(tc.input)
+			l := e.ActiveScreen().Cursor().Link
+			if l.URL != tc.wantURL || l.Params != tc.wantParams {
+				t.Errorf("link: got = %q params %q, want = %q params %q", l.URL, l.Params, tc.wantURL, tc.wantParams)
+			}
+		})
+	}
+}

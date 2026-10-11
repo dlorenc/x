@@ -5,7 +5,9 @@ package vt
 import (
 	"bytes"
 	"image/color"
+	"strings"
 
+	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/ansi"
 )
 
@@ -132,6 +134,32 @@ func (e *Emulator) handleHyperlink(cmd int, data []byte) {
 		return
 	}
 
-	e.scr.cur.Link.Params = string(parts[1])
-	e.scr.cur.Link.URL = string(parts[2])
+	params, uri := SanitizeOSC(string(parts[1])), SanitizeOSC(string(parts[2]))
+	if len(uri) > maxLinkURI || len(params) > maxLinkParams {
+		// Every cell the link covers holds it, and a repaint writes it out
+		// again wherever it starts, so an oversized link is dropped, as VTE
+		// does, rather than multiplied.
+		e.scr.cur.Link = uv.Link{}
+		return
+	}
+	e.scr.cur.Link.Params = params
+	e.scr.cur.Link.URL = uri
+}
+
+// The limits on an OSC 8 hyperlink, VTE's.
+const (
+	maxLinkURI    = 2083
+	maxLinkParams = 250
+)
+
+// SanitizeOSC returns s as valid UTF-8 with the control characters that
+// would end or corrupt an OSC string dropped: C0, DEL and C1, which a
+// terminal may also read in their UTF-8 form.
+func SanitizeOSC(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r >= 0x7f && r <= 0x9f {
+			return -1
+		}
+		return r
+	}, strings.ToValidUTF8(s, "\uFFFD"))
 }
