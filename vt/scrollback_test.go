@@ -21,6 +21,7 @@ func TestScrollback(t *testing.T) {
 	t.Run("scrollback in emulator", func(t *testing.T) {
 		// Create a small terminal
 		e := NewEmulator(10, 5)
+		e.SetScrollbackSize(DefaultScrollbackSize) // off by default
 
 		// Fill the screen with numbered lines and force scrolling
 		for i := 0; i < 10; i++ {
@@ -38,6 +39,7 @@ func TestScrollback(t *testing.T) {
 
 	t.Run("scrollback with content", func(t *testing.T) {
 		e := NewEmulator(20, 5)
+		e.SetScrollbackSize(DefaultScrollbackSize) // off by default
 
 		// Write content that will scroll
 		for i := 0; i < 10; i++ {
@@ -71,6 +73,7 @@ func TestScrollback(t *testing.T) {
 
 	t.Run("clear scrollback", func(t *testing.T) {
 		e := NewEmulator(20, 5)
+		e.SetScrollbackSize(DefaultScrollbackSize) // off by default
 
 		// Write content that will scroll
 		for i := 0; i < 10; i++ {
@@ -92,6 +95,7 @@ func TestScrollback(t *testing.T) {
 
 	t.Run("alt screen does not have scrollback", func(t *testing.T) {
 		e := NewEmulator(20, 5)
+		e.SetScrollbackSize(DefaultScrollbackSize) // off by default
 
 		// Write some content to main screen
 		for i := 0; i < 10; i++ {
@@ -126,6 +130,7 @@ func TestScrollback(t *testing.T) {
 
 	t.Run("ED 2 saves to scrollback", func(t *testing.T) {
 		e := NewEmulator(20, 5)
+		e.SetScrollbackSize(DefaultScrollbackSize) // off by default
 
 		// Write some content (not enough to scroll)
 		e.WriteString("line 1\r\n")
@@ -148,6 +153,7 @@ func TestScrollback(t *testing.T) {
 
 	t.Run("ED 3 clears scrollback", func(t *testing.T) {
 		e := NewEmulator(20, 5)
+		e.SetScrollbackSize(DefaultScrollbackSize) // off by default
 
 		// Write content that will scroll
 		for i := 0; i < 10; i++ {

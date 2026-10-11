@@ -143,3 +143,14 @@ func TestScrollOffOnlyFromTheTopRow(t *testing.T) {
 		})
 	}
 }
+
+func TestScrollbackOffByDefault(t *testing.T) {
+	e := NewEmulator(10, 2)
+	_, _ = e.WriteString("a\r\nb\r\nc\r\nd")
+	if n := e.ScrollbackLen(); n != 0 {
+		t.Errorf("ScrollbackLen: got = %d, want = 0", n)
+	}
+	if e.Scrollback() != nil {
+		t.Error("Scrollback: got a buffer, want none until asked for")
+	}
+}

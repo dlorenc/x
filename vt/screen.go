@@ -24,9 +24,10 @@ type Screen struct {
 
 // NewScreen creates a new screen.
 func NewScreen(w, h int) *Screen {
+	// No scrollback until one is asked for: it keeps every line as cells,
+	// about 100 bytes a cell.
 	s := Screen{
-		buf:        uv.NewRenderBuffer(w, h),
-		scrollback: NewScrollback(DefaultScrollbackSize),
+		buf: uv.NewRenderBuffer(w, h),
 	}
 	s.scroll = s.buf.Bounds()
 	return &s
