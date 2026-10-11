@@ -17,6 +17,10 @@ func (e *Emulator) handleMode(params ansi.Params, set, isAnsi bool) {
 			mode = ansi.ANSIMode(param)
 		}
 
+		if _, ok := trackedModes[mode]; !ok {
+			continue
+		}
+
 		setting := e.modes[mode]
 		if setting == ansi.ModePermanentlyReset || setting == ansi.ModePermanentlySet {
 			// Permanently set modes are ignored.
