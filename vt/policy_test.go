@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/ansi"
@@ -167,5 +168,19 @@ func TestScrollbackOffByDefault(t *testing.T) {
 	}
 	if e.Scrollback() != nil {
 		t.Error("Scrollback: got a buffer, want none until asked for")
+	}
+}
+
+func TestRepliesDroppedByDefault(t *testing.T) {
+	e := NewEmulator(10, 2)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = e.WriteString("\x1b[5n\x1b[c\x1b[6n")
+	}()
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("Write blocked on a query reply by default")
 	}
 }

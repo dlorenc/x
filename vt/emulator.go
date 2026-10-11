@@ -115,6 +115,9 @@ func NewEmulator(w, h int) *Emulator {
 		HandleSos: t.handleSos,
 	})
 	t.pr, t.pw = io.Pipe()
+	// Drop query replies unless asked for them, so a headless emulator nobody
+	// reads from never blocks in Write.
+	t.replyFunc = func([]byte) {}
 	t.resetModes()
 	t.tabstops = uv.DefaultTabStops(w)
 	t.registerDefaultHandlers()

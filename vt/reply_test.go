@@ -50,6 +50,7 @@ func TestReplyFuncDiscards(t *testing.T) {
 
 func TestRepliesGoToReadWithoutReplyFunc(t *testing.T) {
 	e := newTestTerminal(t, 10, 2)
+	e.SetReplyFunc(nil)
 	go func() { _, _ = e.WriteString("\x1b[6n") }()
 	buf := make([]byte, 16)
 	n, err := e.Read(buf)
