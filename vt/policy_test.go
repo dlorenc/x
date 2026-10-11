@@ -84,3 +84,11 @@ func TestRepeatIsBounded(t *testing.T) {
 		}
 	}
 }
+
+func TestCursorVisibilityIsGlobal(t *testing.T) {
+	e := NewEmulator(10, 3)
+	_, _ = e.WriteString("\x1b[?1049h\x1b[?25l\x1b[4 q\x1b[?1049l")
+	if c := e.MainScreen().Cursor(); !c.Hidden || c.Style != CursorUnderline || !c.Steady {
+		t.Errorf("main screen cursor after leaving the alternate screen: got = %+v, want hidden steady underline", c)
+	}
+}

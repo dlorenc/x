@@ -49,7 +49,12 @@ func (e *Emulator) setAltScreenMode(on bool) {
 		e.scr.ClearTouched()
 		e.setCursor(0, 0)
 	} else {
+		// The cursor's visibility and shape belong to the terminal, not to
+		// a screen, as in xterm and tmux: leaving the alternate screen keeps
+		// them.
+		alt := e.scrs[1].cur
 		e.scr = &e.scrs[0]
+		e.scr.cur.Hidden, e.scr.cur.Style, e.scr.cur.Steady = alt.Hidden, alt.Style, alt.Steady
 	}
 	if e.cb.AltScreen != nil {
 		e.cb.AltScreen(on)
