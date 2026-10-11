@@ -105,9 +105,20 @@ func (e *Emulator) carriageReturn() {
 // repeatPreviousCharacter repeats the previous character n times. This is
 // equivalent to typing the same character n times. This performs the same as
 // [ansi.REP].
+//
+// The count is bounded so that a few bytes of input cannot cost up to 65535
+// prints. The repeated character is always one column wide (see
+// handleGrapheme), so once a screenful has been printed every row the repeat
+// reaches holds it, and each further row's worth leaves the screen and the
+// cursor as they were: a count past the screen's cells is cut to the cells
+// plus the same remainder of a row. The rows that would have scrolled off in
+// between, each the character repeated, are not pushed to the scrollback.
 func (e *Emulator) repeatPreviousCharacter(n int) {
 	if e.lastChar == 0 {
 		return
+	}
+	if w, cells := e.Width(), e.Width()*e.Height(); w > 0 && n > cells {
+		n = cells + (n-cells)%w
 	}
 	for range n {
 		e.handlePrint(e.lastChar)

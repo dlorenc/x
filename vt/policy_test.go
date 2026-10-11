@@ -67,3 +67,20 @@ func TestHyperlinkLimits(t *testing.T) {
 		})
 	}
 }
+
+func TestRepeatIsBounded(t *testing.T) {
+	for _, n := range []int{29, 30, 31, 47, 1000, 1001} {
+		capped, full := NewEmulator(10, 3), NewEmulator(10, 3)
+		_, _ = capped.WriteString(fmt.Sprintf("xa\x1b[%db", n))
+		_, _ = full.WriteString("x" + strings.Repeat("a", n+1))
+		for y := range 3 {
+			if got, want := capped.MainScreen().Line(y).String(), full.MainScreen().Line(y).String(); got != want {
+				t.Errorf("n=%d row %d: got = %q, want = %q", n, y, got, want)
+			}
+		}
+		if capped.CursorPosition() != full.CursorPosition() || capped.PendingWrap() != full.PendingWrap() {
+			t.Errorf("n=%d cursor: got = %v wrap %v, want = %v wrap %v", n,
+				capped.CursorPosition(), capped.PendingWrap(), full.CursorPosition(), full.PendingWrap())
+		}
+	}
+}
