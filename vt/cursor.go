@@ -5,9 +5,11 @@ import uv "github.com/charmbracelet/ultraviolet"
 // CursorStyle represents a cursor style.
 type CursorStyle int
 
-// Cursor styles.
+// Cursor styles. CursorDefault is the shape the user configured in their
+// terminal: no DECSCUSR yet, or DECSCUSR 0.
 const (
-	CursorBlock CursorStyle = iota
+	CursorDefault CursorStyle = iota
+	CursorBlock
 	CursorUnderline
 	CursorBar
 )

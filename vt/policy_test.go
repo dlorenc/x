@@ -92,3 +92,30 @@ func TestCursorVisibilityIsGlobal(t *testing.T) {
 		t.Errorf("main screen cursor after leaving the alternate screen: got = %+v, want hidden steady underline", c)
 	}
 }
+
+func TestCursorStyleDefault(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantStyle  CursorStyle
+		wantSteady bool
+	}{
+		{name: "never set", input: "", wantStyle: CursorDefault},
+		{name: "DECSCUSR 0 after a shape", input: "\x1b[4 q\x1b[0 q", wantStyle: CursorDefault},
+		{name: "blinking block", input: "\x1b[1 q", wantStyle: CursorBlock},
+		{name: "steady block", input: "\x1b[2 q", wantStyle: CursorBlock, wantSteady: true},
+		{name: "blinking underline", input: "\x1b[3 q", wantStyle: CursorUnderline},
+		{name: "steady bar", input: "\x1b[6 q", wantStyle: CursorBar, wantSteady: true},
+		{name: "out of range is ignored", input: "\x1b[6 q\x1b[7 q", wantStyle: CursorBar, wantSteady: true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			e := NewEmulator(5, 2)
+			_, _ = e.WriteString(tc.input)
+			c := e.ActiveScreen().Cursor()
+			if c.Style != tc.wantStyle || c.Steady != tc.wantSteady {
+				t.Errorf("cursor: got = style %v steady %v, want = style %v steady %v", c.Style, c.Steady, tc.wantStyle, tc.wantSteady)
+			}
+		})
+	}
+}

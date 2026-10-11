@@ -849,17 +849,13 @@ func (e *Emulator) registerDefaultCsiHandlers() {
 	})
 
 	e.RegisterCsiHandler(ansi.Command(0, ' ', 'q'), func(params ansi.Params) bool {
-		// Set Cursor Style [ansi.DECSCUSR]
-		n := 1
-		if param, _, ok := params.Param(0, 0); ok && param > n {
-			n = param
+		// Set Cursor Style [ansi.DECSCUSR]: 0 is the terminal's default,
+		// then blinking and steady pairs of block, underline and bar.
+		n, _, _ := params.Param(0, 0)
+		if n < 0 || n > 6 {
+			return true
 		}
-		blink := n == 0 || n%2 == 1
-		style := n / 2
-		if !blink {
-			style--
-		}
-		e.scr.setCursorStyle(CursorStyle(style), blink)
+		e.scr.setCursorStyle(CursorStyle((n+1)/2), n == 0 || n%2 == 1)
 		return true
 	})
 
